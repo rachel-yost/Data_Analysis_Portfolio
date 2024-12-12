@@ -93,8 +93,17 @@ Participants smoked at least one cigarette per day, were diagnosed
 with MDD in their lifetime, and had interest in quitting smoking.
 Participants were randomly assigned to receive BA or standard
 treatment, and Varenicline or placebo. The dataset contained 300
-observations and included information on treatment assignment and 21
-other covariates.
+observations and included information on treatment assignment and the
+following 21 additional covariates: age, sex, an indicator for
+non-Hispanic white, indicator for Black, income, education, FTCD score
+at baseline, smoking within 5 minutes of waking up, BDI score at
+baseline, cigarettes per day at baseline, cigarette reward value at
+baseline, Pleasurable Events Scale at baseline-substitute reinforcers,
+Pleasurable Events Scale at baseline-complimentary reinforcers,
+anhedonia, other lifetime DSM-5 diagnoses, taking antidepressant
+medication at baseline, current vs past MDD, Nicotine Metabolism
+Ratio, Exclusive Mentholated Cigarette User, and Baseline readiness to
+quit smoking.
 
 ```{r, include = FALSE}
 data <- read_csv("Downloads/project2.csv")
