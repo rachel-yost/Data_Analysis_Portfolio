@@ -21,7 +21,7 @@ library(glmnet)
 library(mice)
 library(glmnet)
 library(pROC)
-library(gglasso)
+library(ggLasso)
 ```
 
 ### Abstract
@@ -40,7 +40,7 @@ the standard therapy with or without the inclusion of Varenicline. We
 used the data collected during this study to investigate possible
 moderators of BA on smoking cessation, as well as the main effects of
 other covariates. To determine which covariates and interactions were
-important, we used LASSO for variable selection. We split the data
+important, we used Lasso for variable selection. We split the data
 into a training and test set (70/30), and selected lambda using
 10-fold cross validation. The full model included the main effects of
 BA, Varenicline, and all additional covariates, interactions of all
@@ -48,7 +48,7 @@ variables with BA, and interactions of Varenicline with Black and with
 an indicator for if the participant is on antidepressants. We
 evaluated AUC-ROC and model calibration on our test set to check the
 fit of our model. The model produced an AUC of on our training set and
-on our test set. The variables selected by LASSO were Varenicline, an
+on our test set. The variables selected by Lasso were Varenicline, an
 indicator for Non-Hispanic White, FTCD score, anhedonia, presence of
 other mental health diagnoses, an indicator for if the participant is
 currently a smoker, Nicotine Metabolism Ratio (NMR), smoking only
@@ -91,7 +91,7 @@ previous findings, we hypothesized that BA would have differential
 effects on smoking cessation based on the participants level of
 anhedonia and whether or not the individual currently has MDD or had
 it in the past. To determine which interactions and covariates were
-relevant predictors of smoking cessation, we used LASSO for variable
+relevant predictors of smoking cessation, we used Lasso for variable
 selection.
 
 ### Methods
@@ -431,6 +431,14 @@ antidepmed_Var_plot_df <- data_numeric %>% group_by(antidepmed, Var) %>%
   summarize(n = n(), n_abst = sum(abst), prop= n_abst/n) %>% 
   mutate(Var = ifelse(Var == 1, "Varenicline", "Placebo"), 
          SE = sqrt((prop * (1-prop)/n)))
+
+anhendonia_BA_plot_df <- data_numeric %>% group_by(abst, BA) %>% 
+  summarize(mean_score = mean(shaps_score_pq1, na.rm=TRUE), sd_age = sd(shaps_score_pq1, na.rm=TRUE), n = n()) %>% mutate(SE = sd_age/sqrt(n), BA = ifelse(BA == 1, "Behavioral Activation", "Standard Treatment"))
+
+currentMDD_BA_plot_df <- data_numeric %>% group_by(mde_curr, BA) %>% 
+  summarize(n = n(), n_abst = sum(abst), prop= n_abst/n)%>% 
+  mutate(BA = ifelse(BA == 1, "Behavioral Activation", "Standard Treatment"), 
+         SE = sqrt((prop * (1-prop)/n)))
 ```
 
 ```{r Fig 2, fig.cap = "Interactions with Covariates and Treatments. Error bars represent 95% confidence intervals",fig.show="hold", fig.width = 10, fig.height = 13, warning = FALSE, message = FALSE}
@@ -492,23 +500,46 @@ p8 <- ggplot(antidepmed_Var_plot_df,
   geom_col(position = "dodge") +
   geom_errorbar(aes(ymin = prop - 1.96 * SE, ymax = prop + 1.96 * SE), 
                 position = position_dodge(width = 0.9), width = 0.25) +
-  labs(y = "Proportion Abstinent", fill = "On Antidepressents", 
-       x = "Treatment", title = "h") +
+  labs(y = "Proportion Abstinent", fill = "Treatment", 
+       x = "On Antidepresssents", title = "h") +
   theme_minimal()
 
-grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, ncol=2)
+p9 <- ggplot(anhendonia_BA_plot_df, aes(x=as.factor(abst), y = mean_score, fill= BA)) +
+  geom_col(position = "dodge") +
+  geom_errorbar(aes(ymin = mean_score - 1.96 * SE, ymax = mean_score + 1.96 * SE), 
+                position = position_dodge(width = 0.9), width = 0.25) +
+  labs(y = "Mean Anhedonia Score", fill = "Treatment", x = "Smoking Abstinence", title = "f") +
+  theme_minimal()
+
+p10 <- ggplot(currentMDD_BA_plot_df,
+             aes(x = as.factor(mde_curr), y = prop, fill = BA)) + 
+  geom_col(position = "dodge") +
+  geom_errorbar(aes(ymin = prop - 1.96 * SE, ymax = prop + 1.96 * SE), 
+                position = position_dodge(width = 0.9), width = 0.25) +
+  labs(y = "Proportion Abstinent", fill = "Treatment", 
+       x = "Current MDD", title = "h") +
+  theme_minimal()
+grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10, ncol=2)
 ```
 
-### Variable Selection via LASSO
+### Variable Selection via Lasso
 
-Within each of the 5 imputed data sets we fit the full model including
-BA, Varenicline and the other covariates as main effects, and
-interactions with all covariates and Varencline with BA. Additionally,
-we included interactions between Varenicline and Black and Varenicline
-and the indicator for if the participant is taking antidepressants. We
-then used the glmnet package (Friedman et al., 2010), to find the best
+We chose to use Lasso since we have many possible variables under
+considerations as predictors/interaction terms, and we would like to
+select only some of the variables to include in our model, so that our
+result is interpretable and not overfitted. Lasso works by minimizing
+the sum of the squared residuals plus a tuning parameter multiplied by the $\ell_{1}$ norm of the coefficient vector $\beta$. Thus, the penalty term is $\lambda\sum^{p}_{j=1}|\beta_j|$. This $\ell_{1}$ penalty allows the coefficients to be shrunk to exactly zero, in contrast to the penalty used by ridge regression, $\lambda\sum^{p}_{j=1}\beta_j^2$, which shrinks the coefficients towards zero, but they do not reach zero. Best subset selection is another method to consider for variable selection. Best subset selection works by testing each possible combination of $p$ predictors and identifying the best subset of variables based on certain critia such as cross-validated predicted error, AIC, BIC, or adjusted $R^2$. However, since the number of possible models increases rapidly as the number of possible variables increases, it can become computationally difficult with large $p$. Since we have many variables and interactions to test, we chose to use Lasso instead.   
+
+
+Within each of the 5
+imputed data sets we fit the full model including BA, Varenicline and
+the other covariates as main effects, and interactions with all
+covariates and Varencline with BA. Additionally, we included
+interactions between Varenicline and Black and Varenicline and the
+indicator for if the participant is taking antidepressants. We then
+used the glmnet package (Friedman et al., 2010), to find the best
 value of lambda via 10-fold cross validation on the training data,
-based on the minimum mean cross validated error. We then fit the LASSO
+based on the minimum mean cross validated error. We then fit the Lasso
 model on the training set using the selected lambda and obtained
 parameter estimates for the returned variables. We then obtained
 predictions for abstinence on the test set and AUC estimates. After
@@ -565,7 +596,7 @@ for (i in 1:5){
   pen.f <- rep(1, ncol(X))
   pen.f[c(1,2)] <- 0
 
-  #fit lasso model on the training set
+  #fit Lasso model on the training set
   fit_cv <- cv.glmnet(X,y, alpha=1, nfolds = 5, penalty.factor=pen.f)
   
   #get best value of lambda based on cv
@@ -667,7 +698,7 @@ for (i in 1:5){
   pen.f <- rep(1, ncol(X))
   pen.f[c(1,2)] <- 0
 
-  #fit lasso model on the data set
+  #fit Lasso model on the data set
   fit_cv <- cv.glmnet(X,y, alpha=1, nfolds = 5, penalty.factor=pen.f)
   s <- fit_cv$lambda.min
   res <- cbind(res,coef(fit_cv, s=s))
@@ -977,7 +1008,7 @@ grid.arrange(calib_train_plot, calib_test_plot, ncol = 2)
 
 ```
 
-The variables selected by LASSO using the model fit without
+The variables selected by Lasso using the model fit without
 transformations are shown in Table 2.
 
 ```{r}
@@ -998,7 +1029,7 @@ results %>%
 ### Discussion and Conclusion
 
 Based on these results, we reaffirm that Varenicline is effective at
-increasing smoking cessation. The other variables selected by LASSO
+increasing smoking cessation. The other variables selected by Lasso
 did not align with our previous hypothesis that race, sex, age, and
 readiness would interact with BA. The log odds for abstinence are
 predicted to increase when a participant is assigned Varenicline. The
@@ -1021,12 +1052,12 @@ the use of menthol only cigarettes was not correlated with abstinence
 in Figure 1, and menthol cigarettes have previously been suggested to
 be harder to quit (Foulds et al., 2010). The coefficient for smoking
 only menthol cigarettes is rather small, even though it was selected
-by LASSO. Future research should further investigate the effect of
+by Lasso. Future research should further investigate the effect of
 menthol cigarettes on the effectiveness of BA before any conclusions
 can be made. Since menthol was correlated with the age, black
 indicator, and income variables, the coefficient for menthol in the
 model may have absorbed some of the effects of these variables, since
-LASSO penalizes the inclusion of many variables.
+Lasso penalizes the inclusion of many variables.
 
 Some other limitations of our study are that the sample size was
 somewhat small (n=300). Additionally, we did not have an external
