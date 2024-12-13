@@ -47,7 +47,8 @@ BA, Varenicline, and all additional covariates, interactions of all
 variables with BA, and interactions of Varenicline with Black and with
 an indicator for if the participant is on antidepressants. We
 evaluated AUC-ROC and model calibration on our test set to check the
-fit of our model. The variables selected by LASSO were Varenicline, an
+fit of our model. The model produced an AUC of on our training set and
+on our test set. The variables selected by LASSO were Varenicline, an
 indicator for Non-Hispanic White, FTCD score, anhedonia, presence of
 other mental health diagnoses, an indicator for if the participant is
 currently a smoker, Nicotine Metabolism Ratio (NMR), smoking only
@@ -73,15 +74,25 @@ Activation (BA) for smoking cessation are two treatments used in a
 randomized, placebo-controlled trial conducted by Feinberg School of
 Medicine. In this study, Behavioral Activation (BA) therapy is
 compared to standard behavioral treatment, and Varenicline is compared
-to a placebo in a 2x2 factorial design. The results from this trial
-showed that BA did not outperform the standard treatment, with or
-without the inclusion of Varenicline (Hitsman et al. 2023). Using the
-data collected from this trial, we wanted to investigate how other
+to a placebo in a 2x2 factorial design trial on patients with a
+lifetime diagnosis of MDD. The results from this trial showed that BA
+did not outperform the standard treatment, with or without the
+inclusion of Varenicline (Hitsman et al. 2023). Using the data
+collected from this trial, we wanted to investigate how other
 covariates might predict smoking cessation, and if they moderate the
-effects of BA on smoking cessation. We hypothesized that age, sex,
-readiness to quit smoking, and race, would be moderators of BA. To
-determine which interactions and covariates were relevant predictors
-of smoking cessation, we used LASSO for variable selection.
+effects of BA on smoking cessation.
+
+A previous study found that participants who had a higher level of
+anhedonia and received BA were abstinent for significantly more days
+than those who received the standard treatment. They also found that
+BA was more effective at improving abstinence rates when individuals
+had less depressive symptoms. (Martínez-Vispo, 2020). Due to these
+previous findings, we hypothesized that BA would have differential
+effects on smoking cessation based on the participants level of
+anhedonia and whether or not the individual currently has MDD or had
+it in the past. To determine which interactions and covariates were
+relevant predictors of smoking cessation, we used LASSO for variable
+selection.
 
 ### Methods
 
@@ -98,18 +109,18 @@ following 21 additional covariates: age, sex, an indicator for
 non-Hispanic white, indicator for Black, income, education, FTCD score
 at baseline, smoking within 5 minutes of waking up, BDI score at
 baseline, cigarettes per day at baseline, cigarette reward value at
-baseline, Pleasurable Events Scale at baseline-substitute reinforcers,
-Pleasurable Events Scale at baseline-complimentary reinforcers,
+baseline, Pleasant Events Schedule at baseline-substitute reinforcers,
+Pleasant Events Schedule at baseline-complimentary reinforcers,
 anhedonia, other lifetime DSM-5 diagnoses, taking antidepressant
-medication at baseline, current vs past MDD, Nicotine Metabolism
-Ratio, Exclusive Mentholated Cigarette User, and Baseline readiness to
-quit smoking.
+medication at baseline, current vs past MDD, nicotine metabolism
+ratio, indicator for using exclusively metholated cigarettes, and and
+baseline readiness to quit smoking.
 
 ```{r, include = FALSE}
-data <- read_csv("Downloads/project2.csv")
+data <- read_csv("/Users/rachelyost/Downloads/project2.csv")
 
 #save the data while everything is numeric for use later on
-data_numeric <- read_csv("Downloads/project2.csv")
+data_numeric <- read_csv("/Users/rachelyost/Downloads/project2.csv")
 ```
 
 #### Missing Data and Preprocessing
@@ -117,10 +128,13 @@ data_numeric <- read_csv("Downloads/project2.csv")
 Data was missing for the variables for income, FTCD score, cigarette
 reward value at baseline, anhedonia, nicotine metabolism ratio, an
 indicator for smoking only menthol cigarettes, and baseline readiness
-to quit smoking. Missing data was imputed with multiple imputation
+to quit smoking. We split the data into a training and test set
+(70%/30%), randomly sampling within each of the four treatment
+options. This resulted in 211 training observations and 89 test
+observations. We performed multiple imputation on each set separately
 using the mice package (van Buuren and Groothuis-Oudshoorn, 2011),
-resulting in 5 imputed data sets. Number of missing values per
-variable can be seen in Table 1.
+with 5 imputed datasets for each test/train set. Number of missing
+values per variable can be seen in Table 1.
 
 ```{r, include=FALSE}
 #summarize missing data
@@ -136,31 +150,16 @@ rowSums(is.na(data))
 
 #missing some income data, ftcd score, crv_total_pq1, anhedonia, NMR, 
 #only menthol, and readiness
-
-#don't use ID column for prediction
-predmat <- make.predictorMatrix(data)
-predmat[,"id"] <- 0
-
-#impute the missing data 5 times
-miced_data <- mice(data, m=5)
 ```
 
-Binary variables were transformed from numeric to factors. A
-description of the variables stratified by treatment group is shown in
-Table 1. Based on Pearson chi-squared test, Kruskal-Wallis rank sum
-test, and Fisher's exact test, there were no significant differences
-in covariates between treatment groups, except for whether or not the
-participants were taking antidepressant medication. For those in the
-Varenicline only group, 19% were on antidepressant medication,
-compared to 41% of participants in the Behavioral Activation group.
+```{r}
 
-```{r, include = FALSE}
 #need to make a table 1 for each group
 data <- data %>% 
-  mutate(group = case_when(Var == 0 & BA == 0 ~ "Placebo",
-                           Var== 0 & BA == 1 ~ "Behavioral Activation",
-                           Var== 1 & BA == 0 ~ "Varenicline",
-                           Var== 1 & BA == 1 ~ "Both"))
+  mutate(group = case_when(Var == 0 & BA == 0 ~ "Placebo and Standard Treatment",
+                           Var== 0 & BA == 1 ~ "Placebo and BA",
+                           Var== 1 & BA == 0 ~ "Varenicline and Standard Treatment",
+                           Var== 1 & BA == 1 ~ "Varenicline and BA"))
 
 #make sure everything is the correct data type
 numeric_vars <- c("age_ps", "inc", "edu", "ftcd_score", "bdi_score_w00", 
@@ -173,11 +172,54 @@ factor_vars <- colnames(data[,(!colnames(data) %in% numeric_vars)])
 for (vars in factor_vars){
   data[[vars]] <- factor(data[[vars]])
 }
+
+#set seed for replication
+set.seed(190)
+
+#sample for the training and test sets within each treatment group
+placebo_ids <- data[data$group == "Placebo",]$id
+training_ids <- sample(placebo_ids, round(length(placebo_ids)*.70))
+
+var_ids <- data[data$group == "Varenicline",]$id
+training_ids <- c(training_ids, sample(var_ids, round(length(var_ids)*.70)))
+
+BA_ids <- data[data$group == "Behavioral Activation",]$id
+training_ids <- c(training_ids, sample(BA_ids, round(length(BA_ids)*.70)))
+
+both_ids <- data[data$group == "Both",]$id
+training_ids <- c(training_ids, sample(both_ids, round(length(both_ids)*.70)))
+
+#get the rows that have ids in the training set
+training_rows <- which(data$id %in% training_ids)
+
+data <- data %>% select(!group)
 ```
 
 ```{r}
-#remove varibles that we don't want in the table
-data_for_tbl <- data %>% dplyr::select(-id, -Var, -BA, -abst)
+#don't use ID column for prediction
+predmat <- make.predictorMatrix(data)
+predmat[,"id"] <- 0
+
+#impute the missing data 5 times
+miced_data_train <- mice(data[training_rows,], m=5, predictorMatrix = predmat)
+miced_data_test <- mice(data[-training_rows,], m=5, predictorMatrix = predmat)
+```
+
+Binary variables were transformed from numeric to factors. A
+description of the variables stratified by treatment group is shown in
+Table 1. Based on Pearson chi-squared test, Kruskal-Wallis rank sum
+test, and Fisher's exact test, there were no significant differences
+in covariates between treatment groups, except for whether or not the
+participants were taking antidepressant medication. For those in the
+Varenicline only group, 19% were on antidepressant medication,
+compared to 41% of participants in the Behavioral Activation group.
+
+```{r}
+#remove variables that we don't want in the table
+data_for_tbl <- data %>%mutate(group = case_when(Var == 0 & BA == 0 ~ "Placebo and Standard Treatment",
+                           Var== 0 & BA == 1 ~ "Placebo and BA",
+                           Var== 1 & BA == 0 ~ "Varenicline and Standard Treatment",
+                           Var== 1 & BA == 1 ~ "Varenicline and BA"))
 
 #change levels for "group"
 data_for_tbl$group <- factor(data_for_tbl$group, 
@@ -191,8 +233,8 @@ colnames(data_for_tbl) = c("Age", "Sex", "Non-Hispanic White",
                            "FTCD score at baseline", "Smoking with 5 mins of waking up", 
                            "BDI score at baseline", "Cigarettes per day at baseline", 
                            "Cigarette reward value at baseline",
-                           "PES – substitute reinforcers", 
-                           "PES – complementary reinforcers", 
+                           "PES – Substitute reinforcers", 
+                           "PES – Complementary reinforcers", 
                            "Anhedonia", "Other lifetime DSM-5 diagnosis", 
                            "Taking antidepressants", 
                            "Current vs past MDD", "Nicotine Metabolism Ratio", 
@@ -217,13 +259,14 @@ tbl_summary(data_for_tbl,
 
 We also examined variable distributions, and checked to see if any
 variables were skewed. We found that age, income, education, BDI score
-at baseline, cigarettes per day, cigarette reward value, both
-pleasurable events scale variables, anhedonia, and nicotine metabolism
-ratio were skewed. After evaluating square root, squared, and log
-transformations, we decided to include age squared (age\^2), the log
-transformed Nicotine Metabolism Ratio, and square root transformations
-of BDI score, cigarettes per day, and the Pleasurable Events
-Scale-complimentary reinforcers, in one of our possible models.
+at baseline, cigarettes per day, cigarette reward value, both Pleasant
+Events Schedule variables, anhedonia, and nicotine metabolism ratio
+had skewed distributions. After evaluating square root, squared, and
+log transformations, we decided to include age squared (age\^2), the
+log transformed nicotine metabolism ratio, and square root
+transformations of BDI score, cigarettes per day, and the Pleasant
+Events Schedule-complimentary reinforcers in one of our possible
+models.
 
 ```{r, include = FALSE}
 
@@ -264,16 +307,15 @@ plots("NMR") #log
 
 To inform how we select the variables to include in our full model,
 and to check for collinearity among the variables, we examined the
-pearson correlations using the data without imputation (Figure 1).
+spearman correlations using the data without imputation (Figure 1).
 Notable correlations include BDI score with whether or not the
 participant currently has MDD (r = .58), the indicator variable
 "Black" with smoking only menthol cigarettes (r=.46), BDI score with
-anhedonia (r = .41), Black with Non-Hispanic White (r = -.76), income
-with education (r = .40), Black with Non Hispanic White (-.77), FTCD
-score at baseline with smoking within 5 minutes of waking up (r =
-.63), and cigarettes per day with FTCD score (r = .52). Varenicline
-had a correlation of .25 with abstinence, and behavioral activation
-was not correlated with abstinence (r = -.02).
+anhedonia (r = .41), income with education (r = .40), FTCD score at
+baseline with smoking within 5 minutes of waking up (r = .63), and
+cigarettes per day with FTCD score (r = .52). Varenicline had a
+correlation of .25 with abstinence, and behavioral activation was not
+correlated with abstinence (r = -.02).
 
 ```{r Fig 1, fig.cap= "Correlation Plot For All Variables", fig.show="hold",fig.width=8, fig.height=8, warning = FALSE, message = FALSE}
 
@@ -286,8 +328,8 @@ colnames(data_for_mat) <-  c("Abstinence", "Varencicline", "Behavioral Activatio
                            "FTCD score", "Smk 5m waking up", 
                            "BDI score", "Cigarettes per day", 
                            "Cigarette reward value",
-                           "substitute reinforcers", 
-                           "complementary reinforcers", 
+                           "PES-Substitute reinforcers", 
+                           "PES-Complementary reinforcers", 
                            "Anhedonia", "Other DSM-5 diag", 
                            "Taking antidepressants", 
                            "Current vs past MDD", "NMR", 
@@ -295,7 +337,7 @@ colnames(data_for_mat) <-  c("Abstinence", "Varencicline", "Behavioral Activatio
                            "Readiness")
 
 #correlation matrix
-corrplot(cor(na.omit(data_for_mat), method = "pearson"), method = 'color', addCoef.col = 'black', tl.col = "black", 
+corrplot(cor(na.omit(data_for_mat), method = "spearman"), method = 'color', addCoef.col = 'black', tl.col = "black", 
          number.cex = .5, tl.cex = 1)
 ```
 
@@ -423,30 +465,30 @@ p4 <- ggplot(sex_BA_plot_df, aes(x = BA, y = prop, fill = as.factor(sex_ps))) +
   labs(y = "Proportion Abstinent", fill = "Sex", x = "Treatment", title = "d") +
   theme_minimal()
 
-p5 <- ggplot(age_var_plot_df, aes(x=Var, y = mean_age, fill= as.factor(abst))) +
+p5 <- ggplot(age_var_plot_df, aes(x=as.factor(abst), y = mean_age, fill= Var)) +
   geom_col(position = "dodge") +
   geom_errorbar(aes(ymin = mean_age - 1.96 * SE, ymax = mean_age + 1.96 * SE), 
                 position = position_dodge(width = 0.9), width = 0.25) +
-  labs(y = "Mean Age", fill = "Smoking Abstinence", x = "Treatment", title = "e") +
+  labs(y = "Mean Age", fill = "Treatment", x = "Smoking Abstinence", title = "e") +
   theme_minimal()
 
-p6 <- ggplot(age_BA_plot_df, aes(x=BA, y = mean_age, fill= as.factor(abst))) +
+p6 <- ggplot(age_BA_plot_df, aes(x=as.factor(abst), y = mean_age, fill= BA)) +
   geom_col(position = "dodge") +
   geom_errorbar(aes(ymin = mean_age - 1.96 * SE, ymax = mean_age + 1.96 * SE), 
                 position = position_dodge(width = 0.9), width = 0.25) +
-  labs(y = "Mean Age", fill = "Smoking Abstinence", x = "Treatment", title = "f") +
+  labs(y = "Mean Age", fill = "Treatment", x = "Smoking Abstinence", title = "f") +
   theme_minimal()
   
 
-p7 <- ggplot(shaps_BA_plot_df, aes(x=BA, y = mean_score, fill= as.factor(abst))) +
+p7 <- ggplot(shaps_BA_plot_df, aes(x=as.factor(abst), y = mean_score, fill= BA)) +
   geom_col(position = "dodge") +
   geom_errorbar(aes(ymin = mean_score - 1.96 * SE, ymax = mean_score + 1.96 * SE), 
                 position = position_dodge(width = 0.9), width = 0.25) +
-  labs(y = "Mean Score", fill = "Smoking Abstinence", x = "Treatment", title = "g") +
+  labs(y = "Mean FTCD Score", fill = "Treatment", x = "Smoking Abstinence", title = "g") +
   theme_minimal()
 
 p8 <- ggplot(antidepmed_Var_plot_df,
-             aes(x = Var, y = prop, fill = as.factor(antidepmed))) + 
+             aes(x = as.factor(antidepmed), y = prop, fill = Var)) + 
   geom_col(position = "dodge") +
   geom_errorbar(aes(ymin = prop - 1.96 * SE, ymax = prop + 1.96 * SE), 
                 position = position_dodge(width = 0.9), width = 0.25) +
@@ -458,32 +500,6 @@ grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, ncol=2)
 ```
 
 ### Variable Selection via LASSO
-
-We split the data into a training and test set (70%/30%), randomly
-sampling within each of the four treatment options. This resulted in
-211 training observations and 89 test observations.
-
-```{r, include = FALSE}
-#set seed for replication
-set.seed(190)
-
-#sample for the training and test sets within each treatment group
-placebo_ids <- data[data$group == "Placebo",]$id
-training_ids <- sample(placebo_ids, round(length(placebo_ids)*.70))
-
-var_ids <- data[data$group == "Varenicline",]$id
-training_ids <- c(training_ids, sample(var_ids, round(length(var_ids)*.70)))
-
-BA_ids <- data[data$group == "Behavioral Activation",]$id
-training_ids <- c(training_ids, sample(BA_ids, round(length(BA_ids)*.70)))
-
-both_ids <- data[data$group == "Both",]$id
-training_ids <- c(training_ids, sample(both_ids, round(length(both_ids)*.70)))
-
-#get the rows that have ids in the training set
-training_rows <- which(data$id %in% training_ids)
-
-```
 
 Within each of the 5 imputed data sets we fit the full model including
 BA, Varenicline and the other covariates as main effects, and
@@ -512,17 +528,19 @@ colnames(res) <- "s1"
 
 #vector for storing auc
 auc_result <- c()
+auc_result_train <- c()
 
 #list to hold rocs
 rocs <- list()
+rocs_train <- list()
 
 #for each of the 5 data sets
 for (i in 1:5){
-  #get the imputed data set
-  complete_data <- complete(miced_data, action = i)
+  #get the imputed training data set
+  training_data <- complete(miced_data_train, action = i)
   
-  #remove test set
-  training_data <- complete_data[training_rows,]
+  #get the imputed test data set
+  test_data <- complete(miced_data_test, action = i)
   
   #remove id column
   data_for_X <- training_data %>% dplyr:: select(-id)
@@ -537,20 +555,23 @@ for (i in 1:5){
                       BA*Only.Menthol + BA*readiness + Var*Black + Var*antidepmed, data=data_for_X)[,-1]
 
   #get outcome
-  y <- training_data$abst
+  y <- as.numeric(training_data$abst)
 
   #set seed for reproducibility
   set.seed(10)
 
+    
+  #prevent var and BA from being penalized
+  pen.f <- rep(1, ncol(X))
+  pen.f[c(1,2)] <- 0
+
   #fit lasso model on the training set
-  fit_cv <- cv.glmnet(X,y, alpha=1, nfolds = 10)
+  fit_cv <- cv.glmnet(X,y, alpha=1, nfolds = 5, penalty.factor=pen.f)
+  
   #get best value of lambda based on cv
   s <- fit_cv$lambda.min
   #store result
   res <- cbind(res,coef(fit_cv, s=s))
-  
-  #create test set
-  test_data <- complete_data[-training_rows,]
   
   data_for_X_test <- test_data %>% dplyr:: select(-id)
   
@@ -573,18 +594,27 @@ for (i in 1:5){
   auc_result <- c(auc_result, roc$auc)
   
   rocs[[i]] <- roc
+  
+    
+  #get predicted values from the training set
+  preds_train <- predict(fit_cv, X , s = s)
+  
+  #get auc training
+  roc_train <- roc(y, preds_train)
+  auc_result_train <- c(auc_result_train, roc_train$auc)
+  
+  rocs_train[[i]] <- roc_train
 }
 
 #take average of coefficients
 results <- apply(res,1,mean, na.rm=TRUE)
 auc <- mean(auc_result)
+
+auc_train <- mean(auc_result_train)
 ```
 
 ```{r, include = FALSE}
 #repeat the process from above but with the transformed data
-
-#make training set
-training_rows <- sample(1:nrow(data), nrow(data)*.65)
   
 #matrix to hold coefficients
 res <- matrix(nrow=48, ncol=1)
@@ -592,17 +622,20 @@ colnames(res) <- "s1"
 
 #vector to hold auc
 auc_result <- c()
+auc_result_train_t <- c()
 
 #list to hold roc
 rocs_transformed <- list()
+rocs_train_t <- list()
 
 #for each imputed data set
 for (i in 1:5){
-  #get imputed data set 
-  complete_data <- complete(miced_data, action = i)
   
-  #get training data set
-  training_data <- complete_data[training_rows,]
+  #get the imputed training data set
+  training_data <- complete(miced_data_train, action = i)
+  
+  #get the imputed test data set
+  test_data <- complete(miced_data_test, action = i)
   
   #perform variable transformations
   data_transformed <- training_data %>% mutate(age_ps_squared = age_ps^2, 
@@ -625,18 +658,19 @@ for (i in 1:5){
   
 
   #get outcome
-  y <- training_data$abst
+  y <- as.numeric(training_data$abst)
 
   #set seed for reproducibility
   set.seed(10)
+  
+  #prevent var and BA from being penalized
+  pen.f <- rep(1, ncol(X))
+  pen.f[c(1,2)] <- 0
 
   #fit lasso model on the data set
-  fit_cv <- cv.glmnet(X,y, alpha=1, nfolds = 10)
+  fit_cv <- cv.glmnet(X,y, alpha=1, nfolds = 5, penalty.factor=pen.f)
   s <- fit_cv$lambda.min
   res <- cbind(res,coef(fit_cv, s=s))
-  
-  #get test set
-  test_data <- complete_data[-training_rows,]
   
   #get transformed test data
   data_transformed_test <- test_data %>% mutate(age_ps_squared = age_ps^2, 
@@ -657,7 +691,7 @@ for (i in 1:5){
                       BA*Only.Menthol + BA*readiness + Var*Black + Var*antidepmed, data=data_for_X_test)[,-1]
   
  #get outcomes for test data
-  y_test <- data_transformed_test$abst
+  y_test <- as.numeric(data_transformed_test$abst)
     
   #get predictions on test set
   preds <- predict(fit_cv, X_test , s = s)
@@ -667,11 +701,21 @@ for (i in 1:5){
   
   rocs_transformed[[i]] <- roc
   
+  #get predicted values from the training set
+  preds_train_t <- predict(fit_cv, X , s = s)
+  
+  #get auc training
+  roc_train_t <- roc(y, preds_train_t)
+  auc_result_train_t <- c(auc_result_train_t, roc_train_t$auc)
+  
+  rocs_train_t[[i]] <- roc_train_t
+  
 }
 
 #take average of coefficients
 results_transformed <- apply(res,1,mean, na.rm=TRUE)
 auc_transformed <- mean(auc_result)
+auc_train_t <- mean(auc_result_train_t)
 ```
 
 ### Results
@@ -714,13 +758,9 @@ model randomly assigned treatment groups, which would be an AUC of
 ```{r, Fig 3, fig.cap = "ROC Curves for Transformed Data Model",fig.show="hold", fig.width = 10, fig.height = 6, warning = FALSE, message = FALSE}
 
 #get long format data
-longdata <- complete(miced_data, action = "long")
+train <- complete(miced_data_train, action = "long")
+test <- complete(miced_data_test, action = "long")
 
-#get test data
-test <- longdata[!(longdata$id %in% training_ids),]
-
-#get training data
-train <- longdata[longdata$id %in% training_ids,]
 
 #get transformed test data
 data_transformed_test <- test %>% mutate(age_ps_squared = age_ps^2, 
@@ -763,8 +803,8 @@ preds_test <- X_test %*% as.data.frame(results_transformed)[,1]
 preds_train <- X_train %*% as.data.frame(results_transformed)[,1]
 
 #get test and train outcomes
-y_test <- data_for_X_test$abst
-y_train <- data_for_X_train$abst
+y_test <- as.numeric(data_for_X_test$abst)
+y_train <- as.numeric(data_for_X_train$abst)
 
 #get roc on test and training data
 roc_test <- roc(y_test, preds_test)
@@ -773,8 +813,13 @@ roc_train <- roc(y_train, preds_train)
 #start plotting arrangement
 par(mfrow = c(1, 2))
 
-plot(roc_test, main = "ROC Curve on Transformed Test Data", cex.main = .8)
 plot(roc_train, main = "ROC Curve on Transformed Training Data", cex.main =.8)
+# Add AUC value as text on the plot
+text(x = 0.6, y = 0.2, labels = paste("AUC =", round(auc_train_t, 4)), cex = 1.2)
+
+plot(roc_test, main = "ROC Curve on Transformed Test Data", cex.main = .8)
+# Add AUC value as text on the plot
+text(x = 0.6, y = 0.2, labels = paste("AUC =", round(auc_transformed, 4)), cex = 1.2)
 
 #go back to normal plotting arrangement
 par(mfrow = c(1, 1))
@@ -834,14 +879,10 @@ grid.arrange(calib_test_plot, calib_train_plot, ncol=2)
 ```
 
 ```{r, Fig 5, fig.cap = "ROC Curves for Data Modeled Without Transformations",fig.show="hold", fig.width = 10, fig.height = 6, warning = FALSE, message = FALSE}
+
 #get long format data
-longdata <- complete(miced_data, action = "long")
-
-#test data set
-test <- longdata[!(longdata$id %in% training_ids),]
-
-#get training data set
-train <- longdata[longdata$id %in% training_ids,]
+train <- complete(miced_data_train, action = "long")
+test <- complete(miced_data_test, action = "long")
 
 #remove id column
 data_for_X_test <- test %>% dplyr:: select(-id)
@@ -870,8 +911,8 @@ preds_test <- X_test %*% as.data.frame(results)[,1]
 preds_train <- X_train %*% as.data.frame(results)[,1]
 
 #get outcomes
-y_test <- data_for_X_test$abst
-y_train <- data_for_X_train$abst
+y_test <- as.numeric(data_for_X_test$abst)
+y_train <- as.numeric(data_for_X_train$abst)
 
 #get rocs for test and training sets
 roc_test <- roc(y_test, preds_test)
@@ -879,9 +920,11 @@ roc_train <- roc(y_train, preds_train)
 
 par(mfrow = c(1, 2))
 
-plot(roc_test, main = "ROC Curve on Test Data", cex.main = .8)
-
 plot(roc_train, main = "ROC Curve on Training Data", cex.main = .8)
+text(x = 0.6, y = 0.2, labels = paste("AUC =", round(auc_train, 4)), cex = 1.2)
+
+plot(roc_test, main = "ROC Curve on Test Data", cex.main = .8)
+text(x = 0.6, y = 0.2, labels = paste("AUC =", round(auc, 4)), cex = 1.2)
 
 par(mfrow = c(1, 1))
 ```
@@ -930,7 +973,7 @@ calib_train_plot <- ggplot(calib_train) +
   theme_minimal() +
   scale_color_manual(values = c("Ideal" = "red", "Loess Fit" = "blue"))
   
-grid.arrange(calib_test_plot, calib_train_plot, ncol = 2)
+grid.arrange(calib_train_plot, calib_test_plot, ncol = 2)
 
 ```
 
@@ -938,13 +981,17 @@ The variables selected by LASSO using the model fit without
 transformations are shown in Table 2.
 
 ```{r}
-#results <- as.data.frame(results)
-#results <- results %>% filter(abs(results) > 0)
-#colnames(results) <- "Coefficients"
+results <- as.data.frame(results)
+results <- results %>% filter(abs(results) > 0)
+colnames(results) <- "Coefficients"
 
-results <- readRDS(file = "results.RData")
+results$Coefficients <- round(results$Coefficients, digits = 5)
 
-results %>% dplyr::mutate_if(is.numeric, funs(as.character(signif(., 3)))) %>%
+#rownames(results) <- c("(Intercept)", "Behavioral Activation", "Varenicline", "Non-Hispanic White", "FTCD score", "Anhedonia", "Other Diagnosis", "Current MDD", "Nicotine Metabolite Ratio", "Only Menthol", "Readiness", "Behavioral Activation:Hispanic", "Behavioral Activation:Only Menthol")
+
+#results <- readRDS(file = "results.RData")
+
+results %>%
     kable(., caption = "Variables Selected By Lasso")
 ```
 
@@ -986,9 +1033,6 @@ somewhat small (n=300). Additionally, we did not have an external
 validation set to use, so our measures of discrimination and
 calibration may be overfit to our dataset. Our data split further
 reduced the amount of information used to build our model.
-Furthermore, LASSO selected interaction terms but not necessarily the
-corresponding main effects, which reduces the interpretability of the
-model, especially since the main-effect of BA was not included.
 
 Overall, we found that the effectiveness of Behavioral Activation
 therapy may be moderated by participant income, NMR, and smoking only
@@ -1030,6 +1074,12 @@ varenicline for treating tobacco dependence among individuals with
 current or past major depressive disorder: A 2 × 2 factorial,
 randomized, placebo-controlled trial. *Addiction (Abingdon, England)*,
 *118*(9), 1710--1725. https://doi.org/10.1111/add.16209
+
+Martínez-Vispo C, López-Durán A, Senra C, Rodríguez-Cano R, Fernández
+Del Río E, Becoña E. Behavioral activation and smoking cessation
+outcomes: The role of depressive symptoms. Addict Behav. 2020
+Mar;102:106183. doi: 10.1016/j.addbeh.2019.106183. Epub 2019 Oct 19.
+PMID: 31809878.
 
 Stef van Buuren, Karin Groothuis-Oudshoorn (2011). mice: Multivariate
 Imputation by Chained Equations in R. Journal of Statistical Software,
