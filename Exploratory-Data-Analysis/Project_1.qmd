@@ -36,7 +36,7 @@ marathon performance, and whether the impact differs across age and
 gender; and identify the weather parameters that have the largest
 impact on marathon performance. We hypothesized that the weather would
 have a stronger negative impact on older runners, and that effects
-would be similar between men and women. Furthermore,we suspected that
+would be similar between men and women. Furthermore, we suspected that
 relative humidity, temperature, and solar radiation would have the
 strongest impact on runners. Based on the results of my exploratory
 data analysis, weather has a stronger impact on runners as age
@@ -250,7 +250,7 @@ data_w_aqi$Age_binned <- factor(data_w_aqi$Age_binned, levels =
 colnames(data_w_aqi)[6] <- "CR"
 ```
 
-Next,wechecked for missing data and found that weather variables, not
+Next,we checked for missing data and found that weather variables, not
 including aqi, were missing for the Twin Cities, Chicago, and New York
 marathons in 2011, and the Grandma's marathon in 2012. AQI data was
 missing for 32 of the races.
@@ -455,7 +455,9 @@ ggplot(data_4_plot, aes(x=as.numeric(as.character(Year)), y= Time)) +
 ```
 
 \
-\newpage To determine if a red flag results in a weaker average
+\newpage 
+
+To determine if a red flag results in a weaker average
 performance in each age group, we plotted the mean percent off course
 record for each of the binned age groups (Young, Middle, Older, and
 Senior; previously described in *Methods*), for each flag for each
@@ -698,11 +700,17 @@ kable(summary[["coefficients"]], caption = "Results of Linear Regression
       of log(% Off of Course Record) ~ Interaction between Age:Sex:WBGT", digits = 3)
 ```
 
-```{r, include = FALSE}
+```{r}
 summary2 <- summary(lm(log(CR) ~ Age + Year + Race + Sex + TdC + TwC + rh + TgC +
                          SRWm2 + DP + aqi + Age*TdC + Age*TdC + Age*rh + 
                          Age*SRWm2 + Age*aqi, data=data_w_aqi))
-kable(summary2[["coefficients"]])
+
+summary2 <- summary2[["coefficients"]]
+
+rownames(summary2) <- c("(Intercept)", "Age", "Year", "RaceChicago", "RaceGrandma's","RaceNew York","RaceTwin Cities", "Sex" , "Dry Bulb", "Wet Bulb", "Relative Humidity", "Black Globe", "Solar Radiation", "Dew Point", "AQI", "Age:Dry Bulb", "Age:Relative Humidity", "Age:Solar Radiation", "Age:AQI")
+
+kable(summary2, caption = "Results of Linear Regression 
+      of log(% Off of Course Record) ~ Weather Variables and Age", digits = 3)
 ```
 
 # Discussion and Conclusion

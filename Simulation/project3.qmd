@@ -191,7 +191,9 @@ the poisson setting.
 For the settings where the outcome is normally distributed, we have
 300 repetitions of the simulation when varying $\gamma$, and when the
 outcome is poisson, we have 100 repetitions. For the simulations
-varying $\beta$, we use 30 simulations. A larger number of simulations for each measure would have been preferable, but due to time constraints, we selected small $n_sim$. All data generation and
+varying $\beta$, we use 30 simulations. A larger number of simulations
+for each measure would have been preferable, but due to time
+constraints, we selected small $n_sim$. All data generation and
 subsequent analyses were implemented in R version 4.4.1. The input
 seed is "2431".
 
@@ -572,13 +574,14 @@ kable(min_se_data, caption = "Simulation Results for Normal Distribution")
 ```
 
 Figure 1 displays the empirical SE of the treatment effect estimate on
-the y-axis, with increasing $G$ on the x-axis. The outcome in this generated data is distributed normally. Given our budget of
-\$19000000 and $c_1$ of \$40000, we get the empirical SE of
-$\hat{\beta}$ for $\gamma$ = .005, .05, and 5 with $\sigma = 0.5$. The
-rows represent different values of $\gamma$, while the columns are
-different values of $c_2$ (18000, 10000, 500). The simulation was only
-repeated 300 times per value of $G$ tested and setting, which led to
-some volatility in the variance of $\hat{\beta}$. To visualize the trends
+the y-axis, with increasing $G$ on the x-axis. The outcome in this
+generated data is distributed normally. Given our budget of \$19000000
+and $c_1$ of \$40000, we get the empirical SE of $\hat{\beta}$ for
+$\gamma$ = .005, .05, and 5 with $\sigma = 0.5$. The rows represent
+different values of $\gamma$, while the columns are different values
+of $c_2$ (18000, 10000, 500). The simulation was only repeated 300
+times per value of $G$ tested and setting, which led to some
+volatility in the variance of $\hat{\beta}$. To visualize the trends
 more clearly, we added a loess fit line. The red dashed lines show the
 value of $G$ that produces the lowest empirical standard error. Table
 1 displays these values and the associated $R$.
@@ -649,13 +652,13 @@ kable(min_se_data, caption = "Simulation Results for Poisson Distribution")
 ```
 
 Figure 2 shows the empirical SE of $\hat{\beta}$ on the y-axis, and
-increasing $G$ on the x-axis for the poisson setting. Here, we also have a budget of
-\$19000000 and $c_1$ for \$40000. We test $\gamma$ = .005, .05, and 5
-with $\sigma = 0.5$ We tested values of $c_2$: (18000, 10000). The
-simulation was repeated 100 times per value of $G$ tested and setting
-of $\gamma$. The red dashed lines show the value of $G$ that produces
-the lowest empirical standard error. Table 2 displays these values and
-the associated $R$.
+increasing $G$ on the x-axis for the poisson setting. Here, we also
+have a budget of \$19000000 and $c_1$ for \$40000. We test $\gamma$ =
+.005, .05, and 5 with $\sigma = 0.5$ We tested values of $c_2$:
+(18000, 10000). The simulation was repeated 100 times per value of $G$
+tested and setting of $\gamma$. The red dashed lines show the value of
+$G$ that produces the lowest empirical standard error. Table 2
+displays these values and the associated $R$.
 
 ```{r Fig 3, fig.cap = "Empirical SE of Treatment Effect Under Different Beta by Number of Clusters",fig.show="hold", fig.width = 10, fig.height = 6, warning = FALSE, message = FALSE}
 summary_beta <- read.csv("summary_beta.csv")
@@ -691,11 +694,12 @@ observations per cluster decreases. When the variation between the
 clusters is high compared to the variation within the clusters, we
 want to maximize the number of clusters in the study design to reduce
 the variance of the treatment effect estimate. We do not see a large
-difference in this trend between different $c_1/c_2$ in the plots for $\gamma = 5$.
-However, in table 1. we can see that in the scenario where $c_2$ is
-very cheap relative to $c_1$, not as many clusters are needed since we
-can afford to have such a large amount of observations in each
-cluster. However, further simulations should be run to confirm this.
+difference in this trend between different $c_1/c_2$ in the plots for
+$\gamma = 5$. However, in table 1. we can see that in the scenario
+where $c_2$ is very cheap relative to $c_1$, not as many clusters are
+needed since we can afford to have such a large amount of observations
+in each cluster. However, further simulations should be run to confirm
+this.
 
 When $\gamma$ = 0.05, the variance between the clusters is less than
 the variance within the clusters, so we would expect that the optimal
@@ -703,23 +707,23 @@ study design has a smaller number of clusters than for $\gamma$ = 5.
 We notice that the downwards trend shown for $\gamma$ = 5 is reduced
 for $\gamma$ = 0.05, which matches our expectations. When $c_2 = 500$,
 the downwards trend is the steepest, compared to the others with the
-same $\gamma$ and higher $c_2$. Table 1 shows that for cheap $c_2$, the ratio of G/R is
-the lowest.
+same $\gamma$ and higher $c_2$. Table 1 shows that for cheap $c_2$,
+the ratio of G/R is the lowest.
 
-When $\gamma$ = .005, the variance is increasing with $G$ or stable, which is
-the opposite trend as for larger $\gamma$. When $\gamma$ is low
-compared to $\sigma$, the variation between clusters is low, so it
+When $\gamma$ = .005, the variance is increasing with $G$ or stable,
+which is the opposite trend as for larger $\gamma$. When $\gamma$ is
+low compared to $\sigma$, the variation between clusters is low, so it
 makes sense to maximize the number of observations per cluster. In
 Table 1, we see that the ratio $G/R$ generally increases as $\gamma$
 increases.
 
 In Figure 2, we see the results of the the simulations with the
 poisson distribution. Here, the setting of $\gamma$ does not affect
-the optimal combinations of $G$ and $R$ in the way it does for the normal
-distribution shown in Figure 1. This may just be due to not testing
-large enough values of $G$, since $G$ was near the maximum number of
-clusters tested for each setting. Future simulations should consider
-larger $G$.
+the optimal combinations of $G$ and $R$ in the way it does for the
+normal distribution shown in Figure 1. This may just be due to not
+testing large enough values of $G$, since $G$ was near the maximum
+number of clusters tested for each setting. Future simulations should
+consider larger $G$.
 
 We did not see any significant difference in empirical SE between the
 values of $\beta$ tested (.05 and 4), across any of the values for
@@ -729,26 +733,28 @@ $\beta$ for the poisson distributed outcome.
 A limitation of our study is that we only tested combinations that
 included values of G between 2 and 80. Studies where a cluster
 represents repeated measures on a person may want to include many more
-clusters than this. Additionally, the tested values for $c_1$ and $c_2$ may
-not be realistic or applicable to all research settings. We found
-study results suggesting that the cost per participant in a clinical
-trial has a median of \$41,117, but we were unsure about how costs
-would vary in a cluster randomized trial, and how much it might cost
-to initiate a new cluster. Future research could apply our methods to
-other possible values of $c_1$,$c_2$, budgets and treatment effect
-estimates. Additionally, we tested rather extreme settings for the
-ICC, to clearly demonstrate how the best combination of $G$ and $R$
-was affected by changes in ICC. Furthermore, we did not perform many
-replications of the simulation due to time constraints, although we can still identify the
-trends in the results. In a future study, we could identify the number of simulations that achieves an acceptable Monte Carlo SE.
+clusters than this. Additionally, the tested values for $c_1$ and
+$c_2$ may not be realistic or applicable to all research settings. We
+found study results suggesting that the cost per participant in a
+clinical trial has a median of \$41,117, but we were unsure about how
+costs would vary in a cluster randomized trial, and how much it might
+cost to initiate a new cluster. Future research could apply our
+methods to other possible values of $c_1$,$c_2$, budgets and treatment
+effect estimates. Additionally, we tested rather extreme settings for
+the ICC, to clearly demonstrate how the best combination of $G$ and
+$R$ was affected by changes in ICC. Furthermore, we did not perform
+many replications of the simulation due to time constraints, although
+we can still identify the trends in the results. In a future study, we
+could identify the number of simulations that achieves an acceptable
+Monte Carlo SE.
 
 Overall, our results show that when the between cluster variance is
 relatively large, the optimal number of clusters is high, and when the
 between cluster variance is relatively small, the optimal number of
 clusters is low. Choice of $G$ and $R$ also depends on the relative
-costs of adding an observation to a new cluster versus to an existing cluster.
-If $c_1$ is relatively large, then the optimal number of clusters to
-include may be less than it would be for a smaller $c_1$.
+costs of adding an observation to a new cluster versus to an existing
+cluster. If $c_1$ is relatively large, then the optimal number of
+clusters to include may be less than it would be for a smaller $c_1$.
 
 ### References
 
