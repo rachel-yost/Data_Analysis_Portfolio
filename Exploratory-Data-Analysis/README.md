@@ -8,7 +8,7 @@ Previous studies have found that environmental temperature decreases marathon pe
 ### Files
 `Project_1.qmd`: The quarto file which contains the text and code used in my analysis. 
 
-`Project_1.pdf`: The final PDF file containing my report.
+`project_1.pdf`: The final PDF file containing my report.
 
 ### Dependencies
 
