@@ -734,7 +734,7 @@ each age, it is unlikely that the runners would be purposefully
 slowing themselves down. Another limitation is that the air quality
 index data is not as specific as it could be. Further research could
 map which exact air quality testing sites are nearest to the race
-course, rather than just using the closest cbsa code as we did in this
+course, rather than just using the closest CBSA code as we did in this
 study. Also, since this study is only looking at the top performers in
 each age group, it isn't necessarily applicable to slower or less
 experienced runners. Future research could focus on middle of the pack

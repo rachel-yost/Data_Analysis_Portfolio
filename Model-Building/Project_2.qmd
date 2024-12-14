@@ -35,20 +35,32 @@ Behavioral Activation Therapy to a standard treatment, and Varenicline
 to a placebo for smoking cessation in participants with lifetime MDD.
 
 They found that Behavioral Activation Therapy (BA) did not outperform
-the standard treatment with or without the inclusion of Varenicline. We
-used the data collected during this study to investigate possible
+the standard treatment with or without the inclusion of Varenicline.
+We used the data collected during this study to investigate possible
 moderators of BA on smoking cessation, as well as the main effects of
 other covariates. To determine which covariates and interactions were
 important, we used Lasso for variable selection. We split the data
-into a training and test set (70/30), and selected lambda using
-5-fold cross validation. The full model included the main effects of
-BA, Varenicline, and all additional covariates, interactions of all
+into a training and test set (70/30), and selected lambda using 5-fold
+cross validation. The full model included the main effects of BA,
+Varenicline, and all additional covariates, interactions of all
 variables with BA, and interactions of Varenicline with Black and with
 an indicator for if the participant is on antidepressants. We
 evaluated AUC-ROC and model calibration on our test set to check the
-fit of our model. The model produced an AUC of 0.760 on our training set and 0.715
-on our test set. The variables selected by Lasso, other than the treatments-which we chose not to penalize, were Non-Hispanic_White, FTCD score, current MDD, and log(Nicotine Metabolite Ratio). No interactions were selected. The standard treatment slightly outperformed BA, Varenicline outperformed the placebo, non-Hispanic White participants had higher odds of smoking cessation than those who were not non-hispanic White, higher FTCD scores and currently having MDD decreased odds of smoking cessation, and higher log(Nicotine Metabolite Ratio) increased odds of smoking cessation. The
-results of this analysis suggest that having MDD, a higher dependence on nicotine, being non-Hispanic White, and Nicotine Metabolite Ratio can be predictors of success at quitting smoking, reaffirms that Varenicline is effective, and suggests that BA may be less effective than the standard treatment for smoking cessation.
+fit of our model. The model produced an AUC of 0.760 on our training
+set and 0.715 on our test set. The variables selected by Lasso, other
+than the treatments-which we chose not to penalize, were
+Non-Hispanic_White, FTCD score, current MDD, and log(Nicotine
+Metabolite Ratio). No interactions were selected. The standard
+treatment slightly outperformed BA, Varenicline outperformed the
+placebo, non-Hispanic White participants had higher odds of smoking
+cessation than those who were not non-hispanic White, higher FTCD
+scores and currently having MDD decreased odds of smoking cessation,
+and higher log(Nicotine Metabolite Ratio) increased odds of smoking
+cessation. The results of this analysis suggest that having MDD, a
+higher dependence on nicotine, being non-Hispanic White, and Nicotine
+Metabolite Ratio can be predictors of success at quitting smoking,
+reaffirms that Varenicline is effective, and suggests that BA may be
+less effective than the standard treatment for smoking cessation.
 
 ### Introduction
 
@@ -65,10 +77,10 @@ treat nicotine dependence (Burke and Ebbert, 2016), and Behavioral
 Activation (BA) for smoking cessation are two treatments used in a
 randomized, placebo-controlled trial conducted by Feinberg School of
 Medicine. In this study, Behavioral Activation (BA) therapy is
-compared to standard behavioral treatment (ST), and Varenicline is compared
-to a placebo in a 2x2 factorial design trial on patients with a
-lifetime diagnosis of MDD. The results from this trial showed that BA
-did not outperform the standard treatment, with or without the
+compared to standard behavioral treatment (ST), and Varenicline is
+compared to a placebo in a 2x2 factorial design trial on patients with
+a lifetime diagnosis of MDD. The results from this trial showed that
+BA did not outperform the standard treatment, with or without the
 inclusion of Varenicline (Hitsman et al. 2023). Using the data
 collected from this trial, we wanted to investigate how other
 covariates might predict smoking cessation, and if they moderate the
@@ -96,8 +108,10 @@ Participants smoked at least one cigarette per day, were diagnosed
 with MDD in their lifetime, and had interest in quitting smoking.
 Participants were randomly assigned to receive BA or standard
 treatment, and Varenicline or placebo. The dataset contained 300
-observations and included information on treatment assignment and 21 other covariates describing the 
-participants age, sex, race, and information about their health and smoking habits. The full list of variables can be seen in Table 1.
+observations and included information on treatment assignment and 21
+other covariates describing the participants age, sex, race, and
+information about their health and smoking habits. The full list of
+variables can be seen in Table 1.
 
 ```{r, include = FALSE}
 data <- read_csv("/Users/rachelyost/Downloads/project2.csv")
@@ -108,16 +122,16 @@ data_numeric <- read_csv("/Users/rachelyost/Downloads/project2.csv")
 
 #### Preprocessing and Missing Data
 
-We split the data into a training and test set
-(70/30), randomly sampling within each of the four treatment
-options. This resulted in 211 training observations and 89 test
-observations. Data was missing for the variables for income, FTCD score, cigarette
-reward value at baseline, anhedonia, nicotine metabolism ratio, an
-indicator for smoking only menthol cigarettes, and baseline readiness
-to quit smoking. We performed multiple imputation on each training/test set separately
-using the mice package (van Buuren and Groothuis-Oudshoorn, 2011),
-with 5 imputed datasets for each test/train set. Number of missing
-values per variable can be seen in Table 1.
+We split the data into a training and test set (70/30), randomly
+sampling within each of the four treatment options. This resulted in
+211 training observations and 89 test observations. Data was missing
+for the variables for income, FTCD score, cigarette reward value at
+baseline, anhedonia, nicotine metabolism ratio, an indicator for
+smoking only menthol cigarettes, and baseline readiness to quit
+smoking. We performed multiple imputation on each training/test set
+separately using the mice package (van Buuren and Groothuis-Oudshoorn,
+2011), with 5 imputed datasets for each test/train set. Number of
+missing values per variable can be seen in Table 1.
 
 ```{r, include=FALSE}
 #summarize missing data
@@ -249,12 +263,14 @@ We also examined variable distributions, and checked to see if any
 variables were skewed. We found that age, income, education, BDI score
 at baseline, cigarettes per day, cigarette reward value, both Pleasant
 Events Schedule variables, anhedonia, and nicotine metabolism ratio
-had skewed distributions. After visually evaluating square root, squared, and
-log transformations, we decided to include age squared (age\^2), the
-log transformed nicotine metabolism ratio, and square root
-transformations of BDI score, cigarettes per day, and the Pleasant
-Events Schedule-complimentary reinforcers in one of our possible
-models. We performed our analyses on the model with transformations and the model without and compared AUC and model calibration.
+had skewed distributions. After visually evaluating square root,
+squared, and log transformations, we decided to include age squared
+(age\^2), the log transformed nicotine metabolism ratio, and square
+root transformations of BDI score, cigarettes per day, and the
+Pleasant Events Schedule-complimentary reinforcers in one of our
+possible models. We performed our analyses on the model with
+transformations and the model without and compared AUC and model
+calibration.
 
 ```{r, include = FALSE}
 #for each column in the data, if the column is numeric, create a histogram
@@ -512,29 +528,42 @@ grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10, ncol=2)
 ### Variable Selection via Lasso
 
 We chose to use Lasso since we have many possible variables under
-consideration, and we would like to
-select only some of the variables to include in our model, so that our
-result is interpretable and not overfitted. Lasso works by minimizing
-the sum of the squared residuals plus a penalty term: $\lambda\sum^{p}_{j=1}|\beta_j|$. This $\ell_{1}$ penalty allows the coefficients to be shrunk to exactly zero, in contrast to the penalty used by ridge regression, $\lambda\sum^{p}_{j=1}\beta_j^2$, which shrinks the coefficients towards zero, but they do not reach zero. Best subset selection is another method to consider for variable selection. Best subset selection works by testing each possible combination of $p$ predictors and identifying the best subset of variables based on certain criteria such as cross-validated predicted error, AIC, BIC, or adjusted $R^2$. However, since the number of possible models increases rapidly as the number of possible variables increases, it can become computationally difficult with large $p$ (Gareth et al., 2013). Since we have many variables and interactions to test, we chose to use Lasso instead of best subset selection.  
+consideration, and we would like to select only some of the variables
+to include in our model, so that our result is interpretable and not
+overfitted. Lasso works by minimizing the sum of the squared residuals
+plus a penalty term: $\lambda\sum^{p}_{j=1}|\beta_j|$. This $\ell_{1}$
+penalty allows the coefficients to be shrunk to exactly zero, in
+contrast to the penalty used by ridge regression,
+$\lambda\sum^{p}_{j=1}\beta_j^2$, which shrinks the coefficients
+towards zero, but they do not reach zero. Best subset selection is
+another method to consider for variable selection. Best subset
+selection works by testing each possible combination of $p$ predictors
+and identifying the best subset of variables based on certain criteria
+such as cross-validated predicted error, AIC, BIC, or adjusted $R^2$.
+However, since the number of possible models increases rapidly as the
+number of possible variables increases, it can become computationally
+difficult with large $p$ (Gareth et al., 2013). Since we have many
+variables and interactions to test, we chose to use Lasso instead of
+best subset selection.
 
-
-Within each of the 5 imputed data sets we fit the full model including BA, Varenicline and
-the other covariates as main effects, and interactions with all
-covariates and Varencline with BA. Additionally, we included
-interactions between Varenicline and Black and Varenicline and the
-indicator for if the participant is taking antidepressants. We chose not to penalize BA and Varenicline, to ensure they would be kept in the model. We then
-used the glmnet package (Friedman et al., 2010), to find the best
-value of lambda via 5-fold cross validation on the training data,
-based on the minimum mean cross validated error. We then fit the Lasso
-model on the training set using the selected lambda and obtained
-parameter estimates for the returned variables. We then obtained
-predictions for abstinence on the test set and AUC estimates. After
-repeating these steps for the 5 imputed data sets, we averaged AUC
-estimates and model parameter estimates. Using the pooled parameter
-estimates based on Rubin's rules, we predicted abstinence on the
-stacked imputed data and plotted ROC curves and calibration. This
+Within each of the 5 imputed data sets we fit the full model including
+BA, Varenicline and the other covariates as main effects, and
+interactions with all covariates and Varencline with BA. Additionally,
+we included interactions between Varenicline and Black and Varenicline
+and the indicator for if the participant is taking antidepressants. We
+chose not to penalize BA and Varenicline, to ensure they would be kept
+in the model. We then used the glmnet package (Friedman et al., 2010),
+to find the best value of lambda via 5-fold cross validation on the
+training data, based on the minimum mean cross validated error. We
+then fit the Lasso model on the training set using the selected lambda
+and obtained parameter estimates for the returned variables. We then
+obtained predictions for abstinence on the test set and AUC estimates.
+After repeating these steps for the 5 imputed data sets, we averaged
+AUC estimates and model parameter estimates. Using the pooled
+parameter estimates based on Rubin's rules, we predicted abstinence on
+the stacked imputed data and plotted ROC curves and calibration. This
 process was repeated again, instead using the variable transformations
-described previously.
+(square root and log) described previously.
 
 ```{r, include = FALSE}
 ###use the multiple imputation data sets
@@ -736,20 +765,30 @@ auc_train_t <- mean(auc_result_train_t)
 
 ### Results
 
-The model without transformations selected the following variables (other than Varenicline and BA, since they were not penalized in the model) : non-Hispanic White, FTCD score, current MDD, and log(Nicotine Metabolite Ratio) (NMR). The model with transformations selected non-Hispanic White, FTCD score, and current MDD, and no interactions.
+The model without transformations selected the following variables
+(other than Varenicline and BA, since they were not penalized in the
+model) : non-Hispanic White, FTCD score, current MDD, and log(Nicotine
+Metabolite Ratio) (NMR). The model with transformations selected
+non-Hispanic White, FTCD score, and current MDD, and no interactions
+(Table 2).
 
-The AUC obtained by the model with transformations was 0.760 on the training set, and
-0.715 on the test set. The
-ROC curves shown in figure 3 indicate that the model performed better on the training data than the test data, which is to be expected. The calibration plots for the model fit with the transformed data show that the model is calibrated fairly well, since the 95% confidence
-interval for the loess fit overlaps with the ideal fit for the test
-data. The model performs similarly well for the training data. (Figure 4).
+The AUC obtained by the model with transformations was 0.760 on the
+training set, and 0.715 on the test set. The ROC curves shown in
+figure 3 indicate that the model performed better on the training data
+than the test data, which is to be expected. The calibration plots for
+the model fit with the transformed data show that the model is
+calibrated fairly well, since the 95% confidence interval for the
+loess fit overlaps with the ideal fit for the test data. The model
+performs similarly well for the training data. (Figure 4).
 
-On the data without transformations, the AUC was 0.760 on the training set and 0.714 on the test set (Figure 5). The calibration plots fit on the data without transformations also
-show good calibration for the test data and training data (Figure 6).
+On the data without transformations, the AUC was 0.760 on the training
+set and 0.714 on the test set (Figure 5). The calibration plots fit on
+the data without transformations also show good calibration for the
+test data and training data (Figure 6).
 
-Since the model with transformations performed better based on
-AUC, we chose the model with transformations as our best model. An
-AUC of 0.715 indicates that the model had moderate discrimination ability.
+Since the model with transformations performed better based on AUC, we
+chose the model with transformations as our best model. An AUC of
+0.715 indicates that the model had moderate discrimination ability.
 
 ```{r, Fig 3, fig.cap = "ROC Curves for Transformed Data Model",fig.show="hold", fig.width = 10, fig.height = 6, warning = FALSE, message = FALSE}
 
@@ -988,14 +1027,35 @@ rownames(results) <- c("(Intercept)", "Behavioral Activation", "Varenicline", "N
 #results <- readRDS(file = "results.RData")
 
 results %>%
-    kable(., caption = "Variables Selected By Lasso")
+    kable(., caption = "Variables Selected By Lasso Model with Transformations")
 ```
+
 \newpage
 
 ### Discussion and Conclusion
 
 Based on these results, we reaffirm that Varenicline is effective at
-improving the odds of smoking cessation (OR = 1.256; Table 1.). We also see that those who had BA treatment had lower odds of smoking cessation than those who received the standard treatment. This matches the results of the study our data is sourced from, which found that BA did not outperform the standard treatment (Hitsman et al. 2023). Our hypothesis that current MDD would decrease odds of smoking cessation was correct (OR = .953), although we did not see an interaction with BA. We also found that being non-Hispanic white was associated with higher odds of smoking cessation (OR = 1.05), which matches with the results of the correlation plot in Figure 1, where non-Hispanic white had a correlation of r = 0.11 with abstinence. Odds also increased when log(NMR) increases (OR = 1.003), matching the correlation of NMR with abstinence shown in Figure 1, r = 0.13. This seems surprising, since previous studies have shown that lower NMR is associated with more likely to remain abstinent (Lerman et al. 2006, Kaufmann et al. 2015). However, in our model, the OR is very near 1, suggesting that the effect may not be very strong. Additionally, since Lasso does not produce standard errors, we cannot calculate p-values to determine if any of our effects are significant or not. A possible solution to this could have been to fit the model on bootstrapped samples, so that we could obtain standard errors for the output coefficients.
+improving the odds of smoking cessation (OR = 1.256; Table 1.). We
+also see that those who had BA treatment had lower odds of smoking
+cessation than those who received the standard treatment. This matches
+the results of the study our data is sourced from, which found that BA
+did not outperform the standard treatment (Hitsman et al. 2023). Our
+hypothesis that current MDD would decrease odds of smoking cessation
+was correct (OR = .953), although we did not see an interaction with
+BA. We also found that being non-Hispanic white was associated with
+higher odds of smoking cessation (OR = 1.05), which matches with the
+results of the correlation plot in Figure 1, where non-Hispanic white
+had a correlation of r = 0.11 with abstinence. Odds also increased
+when log(NMR) increases (OR = 1.003), matching the correlation of NMR
+with abstinence shown in Figure 1, r = 0.13. This seems surprising,
+since previous studies have shown that lower NMR is associated with
+more likely to remain abstinent (Lerman et al. 2006, Kaufmann et al.
+2015). However, in our model, the OR is very near 1, suggesting that
+the effect may not be very strong. Additionally, since Lasso does not
+produce standard errors, we cannot calculate p-values to determine if
+any of our effects are significant or not. A possible solution to this
+could have been to fit the model on bootstrapped samples, so that we
+could obtain standard errors for the output coefficients.
 
 Some other limitations of our study are that the sample size was
 somewhat small (n=300). Additionally, we did not have an external
@@ -1003,7 +1063,15 @@ validation set to use, so our measures of discrimination and
 calibration may be overfit to our dataset. Our data split further
 reduced the amount of information used to build our model.
 
-Overall, we found that being Non-Hispanic White, FTCD score, having current MDD, and log(NMR) are possible predictors for smoking abstinence when considering the effects of Behavioral Activation and Varenicline. We confirm that Varenicline is an effective treatment and that Behavioral Activation may not be very effective. Future research should be performed to confirm that the other predictors we found are significant, since we were unable to obtain p-values. Additionally, the effect of NMR on smoking cessation should be further investigated, since our results do not match those of previous studies.
+Overall, we found that being Non-Hispanic White, FTCD score, having
+current MDD, and log(NMR) are possible predictors for smoking
+abstinence when considering the effects of Behavioral Activation and
+Varenicline. We confirm that Varenicline is an effective treatment and
+that Behavioral Activation may not be very effective. Future research
+should be performed to confirm that the other predictors we found are
+significant, since we were unable to obtain p-values. Additionally,
+the effect of NMR on smoking cessation should be further investigated,
+since our results do not match those of previous studies.
 
 \newpage
 
@@ -1014,12 +1082,13 @@ smoking cessation: a narrative review of efficacy, adverse effects,
 use in at-risk populations, and adherence. *Patient preference and
 adherence, 10*, 435--441. https://doi.org/10.2147/PPA.S83469
 
-Friedman J, Tibshirani R, Hastie T (2010). "Regularization Paths for Generalized Linear Models via Coordinate Descent." Journal of
+Friedman J, Tibshirani R, Hastie T (2010). "Regularization Paths for
+Generalized Linear Models via Coordinate Descent." Journal of
 Statistical Software, 33(1), 1-22. doi:10.18637/jss.v033.i01
 https://doi.org/10.18637/jss.v033.i01.
 
-Gareth, J., Witten, D., Hastie, T., Tibshirani, R. (2013). “An Introduction to Statistical Learn-
-ing with Application in R.”
+Gareth, J., Witten, D., Hastie, T., Tibshirani, R. (2013). "An
+Introduction to Statistical Learn- ing with Application in R."
 
 Han, B., Volkow, N. D., Blanco, C., Tipperman, D., Einstein, E. B., &
 Compton, W. M. (2022). Trends in Prevalence of Cigarette Smoking Among
@@ -1036,9 +1105,13 @@ current or past major depressive disorder: A 2 × 2 factorial,
 randomized, placebo-controlled trial. *Addiction (Abingdon, England)*,
 *118*(9), 1710--1725. https://doi.org/10.1111/add.16209
 
-Kaufmann A, Hitsman B, Goelz P, et al. Rate of nicotine metabolism and smoking cessation outcomes in a community-based sample of treatment-seeking smokers. Addictive Behaviors. 2015;51:93–9.
+Kaufmann A, Hitsman B, Goelz P, et al. Rate of nicotine metabolism and
+smoking cessation outcomes in a community-based sample of
+treatment-seeking smokers. Addictive Behaviors. 2015;51:93--9.
 
-Lerman C, Tyndale R, Patterson F, et al. Nicotine metabolite ratio predicts efficacy of transdermal nicotine for smoking cessation. Clin Pharmacol Ther. 2006;79(6):600–608.
+Lerman C, Tyndale R, Patterson F, et al. Nicotine metabolite ratio
+predicts efficacy of transdermal nicotine for smoking cessation. Clin
+Pharmacol Ther. 2006;79(6):600--608.
 
 Martínez-Vispo C, López-Durán A, Senra C, Rodríguez-Cano R, Fernández
 Del Río E, Becoña E. Behavioral activation and smoking cessation
