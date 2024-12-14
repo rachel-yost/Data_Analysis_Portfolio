@@ -8,6 +8,7 @@ They found that Behavioral Activation Therapy (BA) did not outperform the standa
 
 ![ROC Plot](Figures/ROC.png)
 ![Calibration Plot](Figures/Calibration.png)
+![Model Results](Figures/Results.png)
 
 ### Files
 `Project_2.qmd`: The quarto file which contains the text and code used in my analysis. 
