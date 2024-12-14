@@ -25,6 +25,10 @@ air quality, and solar radiation have the largest impact on marathon
 performance. Future research is needed to statistically analyze the
 impact of weather, age, and gender on marathon performance.
 
+![Figure 1](Figures/Figure1.png)
+![Figure 4](Figures/Figure4.png)
+![Figure 5](Figures/Figure5.png)
+
 
 ### Files
 `Project_1.qmd`: The quarto file which contains the text and code used in my analysis. 
