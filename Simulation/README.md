@@ -26,6 +26,8 @@ poisson outcome. We found that as the within cluster variance
 increases relative to the between cluster variance, the optimal number
 of clusters decreases.
 
+![Figure 1](Figures/Figure1.png)
+
 ### Files
 `Project3.qmd`: The qmd file which contains the text and code used in my analysis. 
 
