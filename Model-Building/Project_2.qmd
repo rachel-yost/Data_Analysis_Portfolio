@@ -48,19 +48,19 @@ an indicator for if the participant is on antidepressants. We
 evaluated AUC-ROC and model calibration on our test set to check the
 fit of our model. The model produced an AUC of 0.760 on our training
 set and 0.715 on our test set. The variables selected by Lasso, other
-than the treatments-which we chose not to penalize, were
-Non-Hispanic_White, FTCD score, current MDD, and log(Nicotine
-Metabolite Ratio). No interactions were selected. The standard
-treatment slightly outperformed BA, Varenicline outperformed the
-placebo, non-Hispanic White participants had higher odds of smoking
-cessation than those who were not non-hispanic White, higher FTCD
-scores and currently having MDD decreased odds of smoking cessation,
-and higher log(Nicotine Metabolite Ratio) increased odds of smoking
-cessation. The results of this analysis suggest that having MDD, a
-higher dependence on nicotine, being non-Hispanic White, and Nicotine
-Metabolite Ratio can be predictors of success at quitting smoking,
-reaffirms that Varenicline is effective, and suggests that BA may be
-less effective than the standard treatment for smoking cessation.
+than the treatments-which we chose not to penalize, were Non-Hispanic
+White, FTCD score, current MDD, and log(Nicotine Metabolite Ratio). No
+interactions were selected. The standard treatment slightly
+outperformed BA, Varenicline outperformed the placebo, non-Hispanic
+White participants had higher odds of smoking cessation than those who
+were not non-hispanic White, higher FTCD scores and currently having
+MDD decreased odds of smoking cessation, and higher log(Nicotine
+Metabolite Ratio) increased odds of smoking cessation. The results of
+this analysis suggest that having MDD, a higher dependence on
+nicotine, being non-Hispanic White, and Nicotine Metabolite Ratio can
+be predictors of success at quitting smoking. We also reaffirm that
+Varenicline is effective, and found that BA may be less effective than
+the standard treatment for smoking cessation.
 
 ### Introduction
 
@@ -1012,6 +1012,8 @@ grid.arrange(calib_train_plot, calib_test_plot, ncol = 2)
 
 ```
 
+\newpage
+
 The variables selected by Lasso using the model fit with
 transformations are shown in Table 2.
 
@@ -1048,14 +1050,15 @@ results of the correlation plot in Figure 1, where non-Hispanic white
 had a correlation of r = 0.11 with abstinence. Odds also increased
 when log(NMR) increases (OR = 1.003), matching the correlation of NMR
 with abstinence shown in Figure 1, r = 0.13. This seems surprising,
-since previous studies have shown that lower NMR is associated with
-more likely to remain abstinent (Lerman et al. 2006, Kaufmann et al.
-2015). However, in our model, the OR is very near 1, suggesting that
-the effect may not be very strong. Additionally, since Lasso does not
-produce standard errors, we cannot calculate p-values to determine if
-any of our effects are significant or not. A possible solution to this
-could have been to fit the model on bootstrapped samples, so that we
-could obtain standard errors for the output coefficients.
+since previous studies have shown that people with a lower NMR are
+more likely to remain abstinent from smoking (Lerman et al. 2006,
+Kaufmann et al. 2015). However, in our model, the OR is very close to
+1, suggesting that the effect may not be very strong. Additionally,
+since Lasso does not produce standard errors, we cannot calculate
+p-values to determine if any of our effects are significant or not. A
+possible solution to this could have been to fit the model on
+bootstrapped samples, so that we could obtain standard errors for the
+output coefficients.
 
 Some other limitations of our study are that the sample size was
 somewhat small (n=300). Additionally, we did not have an external
