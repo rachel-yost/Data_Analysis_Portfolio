@@ -1,5 +1,5 @@
 ## Data Analysis Portfolio
-This portfolio was created for the Practical Data Analysis (PHP 2550) Class at Brown University. It features projects focusing 
+This portfolio was created for the Practical Data Analysis (PHP 2550) class at Brown University. It features projects focusing 
 on exploratory data analysis, model building, and simualtion.
 
 ### Project 1 - Exploratory Analysis on the Effects of Weather Conditions and Aging on Marathon Performance
