@@ -1,5 +1,5 @@
 ---
-title: "Exploratory Analysis on the Effects of Weather Conditions and Aging on Marthon Performance"
+title: "Exploratory Analysis on the Effects of Weather Conditions and Aging on Marathon Performance"
 author: "Rachel Yost"
 format:
   pdf:
@@ -101,8 +101,8 @@ speed in km/hr, dew point, and WBGT (calculated as (.07 \* Wet-bulb
 temperature) + (.02 \* black globe temperature) + (0.1 \* dry bulb
 temperature)). Additionally, a variable describing the flag color used
 to warn participants of weather conditions was used. The flag color
-was determined based on the following conditions: White = WGBT \< 10C,
-Green = WGBT between 10-18C, Yellow = WGBT between 18-23C, Red = WBGT
+was determined based on the following conditions: White = WBGT \< 10C,
+Green = WBGT between 10-18C, Yellow = WBGT between 18-23C, Red = WBGT
 between 23-28C, and Black = WBGT \> 28C.
 
 Instead of the finishing time for each participant, the data provided
@@ -311,7 +311,7 @@ were male. Most races had a green flag (42%), while few had a red flag
 The age groups were binned so that around 5% of participants were in
 "Young", 50% of participants were in "Middle", 25% in "Older", and 20%
 in "Senior". These statistics and other characteristics can be seen in
-Table 1. For continuous variables, medians and the first and third
+Table 1 and Table 2. For continuous variables, medians and the first and third
 quartile were calculated. For categorical variables, counts and
 percentages are shown.
 
@@ -332,7 +332,7 @@ tbl_summary(data_for_summary_table_races, by = Race, missing = "no") %>%
    as_kable_extra(booktabs = TRUE, 
                   caption = "Race Characteristics",
                  longtable = TRUE, linesep = "") %>%
-   kable_styling(font_size = 12, 
+   kable_styling(font_size = 10, 
                  latex_options = c("repeat_header", "HOLD_position"))
 
 data_for_summary_table_people <- data_for_summary_table %>% select("Race", "Sex", "Age","% Course Record" ,"Time", "Age Binned") %>% distinct()
@@ -342,7 +342,7 @@ tbl_summary(data_for_summary_table_people, by=Race, missing = "no") %>%
    as_kable_extra(booktabs = TRUE, 
                   caption = "Participant Characteristics",
                  longtable = TRUE, linesep = "") %>%
-   kable_styling(font_size = 12, 
+   kable_styling(font_size = 10, 
                  latex_options = c("repeat_header", "HOLD_position"))
 ```
 
@@ -350,8 +350,7 @@ tbl_summary(data_for_summary_table_people, by=Race, missing = "no") %>%
 
 To start, we plotted percent off of course record by age for each of
 the five marathons. As shown in Figure 1, the youngest runners
-gradually improved in performance until a peak around age 25. This was
-consistent for both males and females. Males and females both
+gradually improved in performance until a peak between ages 27-32. Males and females had slightly different ages of peak performance by race. Males and females both
 decreased in performance steadily until their late 50s-early 60s, and
 then performance began decreasing quickly. Running performance in
 females generally declined more with age, compared to males. However,
@@ -362,10 +361,16 @@ than men. These results were consistent across races.\
 \
 
 ```{r}
-data_w_aqi <- data_w_aqi #rmd wont write captions for 2 figures in a row
+min_times <- data_w_aqi %>% group_by(Race, Sex, Age) %>% summarise(meanCR =mean(CR)) %>% group_by(Race, Sex) %>% summarize(min_CR = min(meanCR))
+
+mean_times <- data_w_aqi %>% group_by(Race, Sex, Age) %>% summarise(meanCR =mean(CR))
+
+times <- inner_join(min_times, mean_times) %>% filter(min_CR == meanCR)
+
 ```
 
-```{r Fig 1, fig.cap= "% Off of Course Record by Age, Race, and Gender", fig.show="hold", out.width="80%", warning = FALSE, message = FALSE}
+
+```{r Fig 1, fig.cap= "% Off of Course Record by Age, Race, and Gender", fig.show="hold", out.width="100%", warning = FALSE, message = FALSE}
 #plot % off CR by age faceted by gender
 
 ggplot(data_w_aqi, aes(x = Age, y = CR)) +
@@ -377,7 +382,7 @@ ggplot(data_w_aqi, aes(x = Age, y = CR)) +
   theme(
     text = element_text(family = "sans", color = "black"), 
     strip.text = element_text(size = 14),
-    axis.text = element_text(size = 8),
+    axis.text = element_text(size = 7),
     axis.title = element_text(size = 14),
     legend.text = element_text(size = 14),
     legend.title = element_text(size = 14)
@@ -401,7 +406,7 @@ winners <- data_w_aqi %>% group_by(Race,Year,Sex) %>% filter(CR == min(CR))
 #winners %>% group_by(Sex) %>% summarize(mean_age = mean(Age))
 ```
 
-```{r Fig 2, fig.cap = "Histogram of Ages of Marathon Winners by Gender", fig.show="hold", out.width="100%", warning = FALSE, message = FALSE}
+```{r Fig 2, fig.cap = "Histogram of Ages of Marathon Winners by Gender", fig.show="hold", out.width="70%", warning = FALSE, message = FALSE}
 ggplot(winners) + 
   geom_histogram(aes(x=Age, fill = Sex), color = "black", binwidth = 1) + 
   labs(x = "Age", y = "Count") + 
@@ -409,7 +414,7 @@ ggplot(winners) +
   theme_minimal() +
   theme(text = element_text(family = "sans", color = "black"), 
         strip.text = element_text(size = 14),
-        axis.text = element_text(size = 11),  
+        axis.text = element_text(size = 10),  
         axis.title = element_text(size = 14),  
         legend.title = element_text(size = 14)) + 
   scale_x_continuous(breaks = seq(min(winners$Age), max(winners$Age), by = 2)) + 
@@ -459,11 +464,11 @@ on standard error. The only races that showed differences in
 performance based on flag were the Boston, Chicago, and Twin Cities
 marathons. In the Boston Marathon, the mean percent off course record
 increases between the white and red flags for all age groups except
-for "Young", and this increase appears to be largest in the "Senior"
+for "Young" and "Older", and this increase appears to be largest in the "Senior"
 group. For the Twin Cities marathon, mean percent off course record
-also increases for all age groups except "Young" between the white
+increases for the "Middle" and "Older" age groups between the white
 flag and red flag. For the Chicago marathon, mean percent off course
-record increases between the white and red flags for the "Middle" and
+record also only increases between the white and red flags for the "Middle" and
 "Older" groups only. However, there were few (16) results recorded in
 the "Senior" age group with a red flag, so the lack of significance
 may be due to the small sample size.\
@@ -487,7 +492,7 @@ flag_age <- data_w_aqi %>% group_by(Age_binned, Flag, Race) %>%
 flag_age <- na.omit(flag_age)
 ```
 
-```{r Fig 4, fig.cap = "Mean % off Course Record by Age and Flag",fig.show="hold", fig.width = 10, fig.height = 13, warning = FALSE, message = FALSE}
+```{r Fig 4, fig.cap = "Mean Time by Age and Flag",fig.show="hold", fig.width = 10, fig.height = 13, warning = FALSE, message = FALSE}
 
 p_boston <- (ggplot(flag_age[flag_age$Race == "Boston",], 
                     aes(x=Flag, y = time, fill=Flag)) + 
@@ -536,12 +541,12 @@ plot_grid(p_boston, p_chicago, p_twin_cities)
 \newpage
 
 To see how the weather variables are correlated with each other, we
-produced a plot of the correlations between the variables. Percent off
-of course record appears to only be strongly correlated with age. The
-weather variables are correlated with each other, which is to be
-expected since many of the variables are calculated based on other
-variables. Humidity and solar radiation are negatively correlated, and
-wind and aqi are negatively correlated.
+produced a plot of the spearman correlations between the variables.
+Percent off of course record appears to only be strongly correlated
+with age. The weather variables are correlated with each other, which
+is to be expected since many of the variables are calculated based on
+other variables. Humidity and solar radiation are negatively
+correlated, and wind and aqi are negatively correlated.
 
 ```{r Fig 5, fig.cap = "Correlations of Weather Variables with % off Course Record", fig.show="hold", fig.width=8, fig.height=8, warning = FALSE, message = FALSE}
 #make year an integer for correlations
@@ -553,7 +558,7 @@ data_w_aqi$Sex <- ifelse(data_w_aqi$Sex == "Female", 0, 1)
 #remove variables we aren't interest in
 cor_data <- data_w_aqi %>% dplyr::select(-Race, -Flag, -Age_binned, -Time, -CR.y,
                                          -Sex)
-cor_matrix <- cor(na.omit(cor_data))
+cor_matrix <- cor(na.omit(cor_data), method = "spearman")
 colnames(cor_matrix) <- c("Year" ,"Age" ,  "% Course Record" , "Dry Bulb",
                           "Wet Bulb"  , "% Relative Humidity" ,"Black Globe",
                           "Solar Radiation" ,"Dew Point" ,   "Wind",  "WBGT" ,"AQI")
@@ -589,9 +594,13 @@ group. These correlations also do not seem to vary across genders. We
 did not include the "Young" age group, since they had few observations
 and we suspected that they would not differ strongly from the "Middle"
 age group. Overall, WBGT seems to be the most correlated with a
-decreased performance across the age groups. \newpage
+decreased performance across the age groups. We show this again in
+Figure 7, where the % off of course record increases as WBGT increases
+for the "young", "middle", and "older" age groups. We do not see a clear trend in the "senior" age group. 
 
-```{r Fig 6, fig.cap = "Correlations of Weather Variables with % off Course Record by Age Group and Gender", fig.show="hold", fig.width=8, fig.height=8, warning = FALSE, message = FALSE}
+\newpage
+
+```{r Fig 6, fig.cap = "Correlations of Weather Variables with % off Course Record by Age Group and Gender", fig.show="hold", fig.width=6, fig.height=6, warning = FALSE, message = FALSE}
 
 ###compare senior men, senior women, with middle men, middle women
 #make corr plots for each group
@@ -649,35 +658,48 @@ rownames(cor_matrix2) <- c("Year","Age" ,"% Course Record" , "Dry Bulb" ,
 
 #plot results with corrplot
 corrplot(cor_matrix2, method = 'color', addCoef.col = 'black', tl.col = "black", 
-         number.cex = 1, tl.cex = 1) 
+         number.cex = .6, tl.cex = 1) 
 
 ```
 
 \newpage
 
-Finally, to further investigate the effects of age, sex, and WBGT on
-marathon performance, we performed a linear regression. We modeled
-percent off of course record based on the three way interaction of
-age, sex, and WBGT. The results of this regression are shown in Table
-2. The interaction of age and WBGT is significant (p \< .05), but the
-three way interaction is not, and neither is sex with WBGT. This
-agrees with the results from our previous correlation plots.
+```{r, Fig 7, fig.cap = "% off Course Record by WBGT by Age Group", fig.show="hold", fig.width=4, fig.height=4, warning = FALSE, message = FALSE}
+ggplot(data= data_w_aqi, aes(x=as.numeric(WBGT), y = as.numeric(CR), color = Age_binned)) + geom_smooth() + theme_minimal() + labs(x="WBGT", y="% off Course Record", color = "Age Group")
+```
 
-We also performed a second linear regression, this time using all the
+```{r, include=FALSE}
+#look at histograms of variables to check distributions
+hist((data_w_aqi$Age))
+hist(sqrt(data_w_aqi$Age))
+hist(as.numeric(data_w_aqi$WBGT))
+hist(as.numeric(data_w_aqi$CR))
+hist(log(data_w_aqi$CR))
+```
+\newpage
+
+Finally, to further investigate the effects of age, sex, and WBGT on
+marathon performance, we performed a linear regression. We first looked at the distribution of the variables in the model: percent off of course record, age, WBGT, and sex. We found that taking the log of the percent off of course record produced a more normal distribution, so we used logged percent off course record as our outcome. We had a three way interaction of
+age, sex, and WBGT as predictors, along with the two way interaction and main effects. The results of this regression are shown in Table
+3. The interaction of age and WBGT is significant (p \< .05), but the
+three way interaction is not, and neither is sex with WBGT. This
+agrees with the results from our previous correlation plots. The main effects of age, sex, and WBGT are significant, and so is the interaction of age with sex and age with WBGT. 
+
+We also performed a second linear regression (Table 4), this time using all the
 weather variables, age, year, race, and interactions between age with
 dry bulb temperature, relative humidity, solar radiation, and air
-quality index. We found that age, year, race, relative humidity, solar
+quality index. We found that age, sex, race, relative humidity, solar
 radiation, air quality, the interaction of age with relative humidity,
-age with solar radiation, and age with air quality were significant.
+age with solar radiation, age with dry bulb, and age with air quality were significant.
 
 ```{r}
-summary <- summary(lm(CR ~ Age*Sex*WBGT, data=data_w_aqi))
+summary <- summary(lm(log(CR) ~ Age*Sex*WBGT, data=data_w_aqi))
 kable(summary[["coefficients"]], caption = "Results of Linear Regression 
-      of % Off of Course Record ~ Interaction between Age:Sex:WBGT", digits = 3)
+      of log(% Off of Course Record) ~ Interaction between Age:Sex:WBGT", digits = 3)
 ```
 
 ```{r, include = FALSE}
-summary2 <- summary(lm(CR ~ Age + Year + Race + Sex + TdC + TwC + rh + TgC +
+summary2 <- summary(lm(log(CR) ~ Age + Year + Race + Sex + TdC + TwC + rh + TgC +
                          SRWm2 + DP + aqi + Age*TdC + Age*TdC + Age*rh + 
                          Age*SRWm2 + Age*aqi, data=data_w_aqi))
 kable(summary2[["coefficients"]])
@@ -693,15 +715,13 @@ but not necessarily across gender.
 Furthermore, we show that the effects of weather conditions on
 marathon performance differ by age, when age is binned and when age is
 continuous. The results from Figure 4 demonstrate how the impact of
-the warning flag differs across age groups, with runners older than 65
-being the most likely to experience a decline in performance in "red"
-conditions. Some weather conditions were shown to be important in
+the warning flag differs across age groups. Some weather conditions were shown to be important in
 predicting performance declines. These variables were relative
-humidity, solar radiation, and air quality. Since WGBT factors into
-these conditions, WGBT seems to be a good overall measure of weather
+humidity, solar radiation, and air quality. Since WBGT factors into
+these conditions, WBGT seems to be a good overall measure of weather
 conditions. However, since air quality is shown to be associated with
 marathon performance, it might be worthwhile to investigate how it
-could be factored into this the WGBT measurement, or how it should be
+could be factored into this the WBGT measurement, or how it should be
 included in further statistical analyses.
 
 A limitation of this study is that the effects of the weather on
